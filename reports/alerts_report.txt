@@ -1,0 +1,6 @@
+Transactions 1 ALERT: High deny rate for denied!
+Transactions 1 ALERT: High failure rate for failed!
+Transactions 1 ALERT: High refund rate for refunded!
+Transactions 2 ALERT: High deny rate for denied!
+Transactions 2 ALERT: High failure rate for failed!
+Transactions 2 ALERT: High refund rate for refunded!
