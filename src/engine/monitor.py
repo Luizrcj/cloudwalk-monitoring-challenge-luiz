@@ -6,7 +6,7 @@ from src.core.state import MonitoringState, MinuteBucket
 from src.core.rules import detect_status_anomalies, AnomalySignal
 from src.ingest.csv_stream import minute_stream
 from src.alerting.alerts import handle_alerts
-from src.dashboard.snapshot import build_snapshot
+from src.dashboard.snapshot import build_snapshot, append_snapshot_to_log
 
 
 def run_monitoring_service(
@@ -56,10 +56,12 @@ def _process_minute(state: MonitoringState, bucket: MinuteBucket) -> None:
     if not latest:
         return
 
-    # build dashboard snapshot
-    from src.dashboard.snapshot import build_snapshot
-    snapshot = build_snapshot(state)
-    print(snapshot)
+    # snapshot textual no terminal
+    snapshot_text = build_snapshot(state)
+    print(snapshot_text)
+
+    # snapshot estruturado em JSONL para o dashboard
+    append_snapshot_to_log(state)
 
     # run anomaly detection
     signals: List[AnomalySignal] = detect_status_anomalies(
