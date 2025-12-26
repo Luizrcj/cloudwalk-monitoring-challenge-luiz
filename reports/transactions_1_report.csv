@@ -1,8 +1,0 @@
-status,failure_rate,deny_rate,refund_rate
-approved,0,0,0
-backend_reversed,0,0,0
-denied,0,26126,0
-failed,68,0,0
-processing,0,0,0
-refunded,0,0,953
-reversed,0,0,0
