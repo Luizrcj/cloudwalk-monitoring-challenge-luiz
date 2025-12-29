@@ -1,175 +1,201 @@
 CloudWalk – Real-Time Transactions Monitoring
 
-Sistema de monitoramento contínuo de transações, construído para detectar anomalias operacionais em tempo quase real analisando comportamento por minuto.
-Mantém um estado vivo em memória, aplica regras estatísticas, gera alertas estruturados e agora também disponibiliza um dashboard visual em tempo quase real.
 
-O objetivo foi simular um ambiente de produção real, com:
+Sistema de monitoramento quase em tempo real para análise operacional de transações, com engine contínua, detecção de anomalias e dashboard visual.
 
-• arquitetura limpa e desacoplada
-• execução contínua
-• regras estatísticas claras
-• estado vivo em memória
-• alertas contextuais e explicáveis
-• visualização operacional em tempo quase real
+
+
+O objetivo foi simular um ambiente próximo de produção, entregando:
+
+arquitetura limpa e desacoplada
+
+execução contínua
+
+janela deslizante de histórico
+
+regras estatísticas explicáveis
+
+estado vivo em memória
+
+alertas estruturados
+
+dashboard operacional em tempo quase real
+
+
 
 🎯 O que este sistema faz
 
-✔️ Lê e simula o fluxo de transações minuto a minuto
-✔️ Mantém uma janela deslizante de histórico (ex: últimos 30 min)
-✔️ Monitora métricas sensíveis operacionalmente
-✔️ Detecta spikes estatísticos usando baseline + z-score
-✔️ Emite alertas estruturados automaticamente
-✔️ Exibe um mini-dashboard textual no terminal
-✔️ Disponibiliza um dashboard visual contínuo com gráficos em tempo quase real
-
-🔎 Como o monitoramento funciona na prática
-
-O serviço roda como um processo contínuo em Python. Ele percorre os eventos de transações em “tempo quase real”, minuto a minuto, mantendo uma janela deslizante de 30 minutos.
-
-A cada minuto o sistema executa quatro etapas:
-
-1️⃣ Atualiza o estado
-
-Adiciona o bucket de transações daquele minuto na janela em memória.
-
-2️⃣ Constrói um snapshot
-
-Gera um mini dashboard textual com o estado atual (approved, failed, denied, reversed, etc.).
-
-3️⃣ Avalia anomalias
-
-Aplica regras estatísticas baseadas em:
-
-– baseline histórico
-– média
-– desvio padrão
-– z-score
-
-4️⃣ Emite alertas
-
-Quando encontra comportamento suspeito → imprime um alerta estruturado com contexto completo.
-
-🖥️ Exemplo real de execução
-📡 Processing minute -> 2025-07-12 18:07:00
-========= SNAPSHOT =========
-Window Size    : 30 minutes
-Latest Minute  : 2025-07-12 18:07:00
-
-Approved       : 116
-Failed         : 0
-Denied         : 5
-Reversed       : 5
-============================
-⚠️  1 anomaly signal(s) detected!
-
-🚨 ALERT DETECTED 🚨
-Time: 2025-07-12 18:07:00
-Dimension: status
-Key: reversed
-Current Value: 5
-Baseline Mean: 1.17
-Baseline Std : 1.18
-Z-Score      : 3.26
-----------------------------------------------
+✔️ simula fluxo de transações minuto a minuto
+✔️ mantém janela deslizante de 30 minutos
+✔️ calcula métricas operacionais
+✔️ detecta anomalias com baseline + z-score
+✔️ gera snapshots estruturados e persistidos
+✔️ emite alertas com contexto
+✔️ disponibiliza dashboard visual contínuo
 
 
-Isso simula uma operação real rodando, com vida, histórico e inteligência.
+
+🔎 Como o monitoramento funciona
+
+O motor percorre os eventos de transações minuto a minuto, mantendo um estado vivo.
+A cada minuto ele:
+
+1️⃣ Atualiza a janela de histórico
+2️⃣ Gera um snapshot operacional
+3️⃣ Avalia anomalias estatísticas
+4️⃣ Emite alertas quando necessário
+
+
 
 🧠 Regras de Detecção
 
-O sistema avalia inicialmente os status mais críticos:
+O sistema monitora principalmente:
 
-• failed
-• denied
-• reversed
+failed
 
-A lógica segue:
+denied
 
-✔️ só avalia quando há histórico suficiente
-✔️ ignora ruído de volumes baixos
-✔️ calcula baseline (média + desvio padrão)
-✔️ dispara alerta quando:
+reversed
+
+
+E aplica:
+
+baseline histórico
+
+média
+
+desvio padrão
+
+z-score
+
+
+Dispara alerta quando:
 
 z-score > 3.0
 
 
-Ou seja — detecta comportamentos estatisticamente anormais.
 
 🖥️ Real-Time Dashboard
 
-Além do engine contínuo, o projeto inclui um dashboard em tempo quase real, desenvolvido em Streamlit, que consome snapshots gerados pelo engine e exibe:
+O dashboard em Streamlit:
 
-✔️ último estado do sistema
-✔️ métricas operacionais
-✔️ gráficos de evolução por status
-✔️ atualização contínua enquanto o serviço roda
+exibe último snapshot
 
-O dashboard lê snapshots estruturados gerados pelo engine em um arquivo incremental (monitor_snapshots.jsonl) e atualiza automaticamente.
+mostra métricas operacionais
 
-📌 Design Decision – JSONL
-Snapshots são gravados em formato JSONL (um JSON por linha) porque:
-✔ permite leitura incremental em tempo real
-✔ suporta escrita contínua sem reprocessar o arquivo
-✔ funciona bem como “ponte” entre engine e dashboard
-✔ é simples, robusto e operacionalmente eficiente
+apresenta gráfico de evolução
+
+atualiza continuamente enquanto o motor gera dados
+
+Os snapshots são gravados em:
+
+data/monitor_snapshots.jsonl
+
+
+Formato JSONL foi escolhido porque:
+
+permite leitura incremental
+
+suporta escrita contínua
+
+simples e resiliente
+
+perfeito como “ponte” engine → dashboard
+
+
 
 🏗️ Arquitetura do Projeto
-
-Organizado para ser claro, extensível e fácil de evoluir.
-
 src/
- ├── alerting/
- │    └── alerts.py        # formatação e emissão de alertas
- │
- ├── core/
- │    ├── event.py         # contrato do evento por minuto
- │    ├── state.py         # janela deslizante e estado global
- │    ├── rules.py         # regras de anomalia
- │
- ├── dashboard/
- │    └── snapshot.py      # snapshots e export para dashboard
- │
- ├── engine/
- │    └── monitor.py       # loop principal / lifecycle do sistema
- │
- ├── ingest/
- │    └── csv_stream.py    # simulação de stream minuto a minuto
+ ├── alerting/      alertas e formatação
+ ├── core/          estado, eventos e regras
+ ├── dashboard/     snapshot interface
+ ├── engine/        lifecycle do monitoramento
+ ├── ingest/        simulação de fluxo
 
-▶️ Como executar
-1️⃣ Iniciar o serviço de monitoramento
 
-Na raiz do projeto:
+
+🧾 Comportamento do Sistema (Design Decision)
+
+Este sistema processa um dataset histórico e reproduz transações minuto a minuto.
+
+o engine gera snapshots incrementalmente
+
+o dashboard consome o snapshot mais recente válido
+
+quando o dataset termina, o dashboard mantém o último estado
+
+não “inventa” novos valores
+
+não retrocede no tempo
+
+Esse comportamento é intencional e alinhado com sistemas reais de observabilidade:
+se não há novos dados, o sistema permanece estável.
+
+
+
+🔁 Como reproduzir / testar novamente
+
+Para reiniciar o replay do zero:
+
+1️⃣ Pare o engine e o dashboard
+2️⃣ Vá até a pasta data/
+3️⃣ Delete ou renomeie:
+
+monitor_snapshots.jsonl
+
+
+4️⃣ Rode o motor:
 
 python main.py
 
 
-Isso irá:
-
-– simular tempo real
-– exibir snapshots no terminal
-– gerar snapshots estruturados para o dashboard
-
-2️⃣ Iniciar o dashboard visual
-
-Em outro terminal, na raiz do projeto:
+5️⃣ Em outro terminal, rode o dashboard:
 
 streamlit run dashboard.py
 
 
-O navegador abrirá automaticamente exibindo:
+O dashboard irá:
 
-– último snapshot
-– métricas
-– gráfico de evolução
-– atualização contínua
+iniciar com poucos snapshots
+
+crescer ao longo do processamento
+
+evoluir até o último timestamp do dataset
+
+
+
+💡 Observação Importante
+
+O sistema foi desenhado como monitor real:
+
+Não cria dados quando não há novos eventos
+Não “anda para trás no tempo”
+Mantém o último estado válido do ambiente
+
+Caso desejado, é trivial habilitar um modo contínuo (loop infinito) no engine.
+
+
+
+▶️ Execução Rápida
+
+Motor:
+
+python main.py
+
+
+Dashboard:
+
+streamlit run dashboard.py
+
+
 
 🚀 Resultado
 
 Você obtém um sistema que:
 
 ✔️ roda continuamente
-✔️ mantém estado vivo
-✔️ detecta anomalias proativamente
-✔️ gera visibilidade operacional real
-✔️ combina engine + análise + dashboard
-✔️ é simples de rodar, entender e evoluir
+✔️ mantém estado real
+✔️ detecta anomalias
+✔️ gera evidências operacionais
+✔️ fornece dashboard quase em tempo real
+✔️ é simples de executar, entender e evoluir
